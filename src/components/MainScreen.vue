@@ -1,6 +1,6 @@
 <template>
   <q-page class="flex flex-center">
-    alos
+    MainScreen
   </q-page>
 </template>
 
@@ -9,6 +9,6 @@
 
 <script>
 export default {
-  name: 'HelloWorld'
+  name: 'MainScreen'
 }
 </script>
