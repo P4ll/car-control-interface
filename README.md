@@ -1,4 +1,12 @@
-# car-control-interface
+# Simple client for [automodel with esp32](https://github.com/Mogreine/CarProject)
+
+## TODO
+1. Передача данных с сервера на клиент
+2. Показ изображения
+3. Обработка нажатия клавиш
+4. Передача данных с клиента на сервер
+5. Начальная страница настроек
+6. Переход между страницами
 
 ## Project setup
 ```

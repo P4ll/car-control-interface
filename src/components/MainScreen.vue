@@ -18,13 +18,13 @@
     <q-drawer v-model="leftDrawerOpen" show-if-above bordered content-class="bg-grey-2">
       <q-list>
         <q-item-label header>Settings</q-item-label>
-        <q-item clickable @click="mlChange()">
+        <q-item clickable>
           <q-item-section avatar>
             <toggle-button v-model="useML" />
           </q-item-section>
-          <q-item-section>Распознавание лиц</q-item-section>
+          <q-item-section>Распознавание лиц {{useML}}</q-item-section>
         </q-item>
-        <q-item clickable @click="pidChange">
+        <q-item clickable>
           <q-item-section avatar>
             <toggle-button v-model="usePID" />
           </q-item-section>
@@ -34,6 +34,7 @@
     </q-drawer>
     <q-page class="flex flex-center">
       <img alt="Quasar logo" src="../assets/logo.png" />
+      <div id="pic"></div>
     </q-page>
   </q-layout>
 </template>
@@ -55,20 +56,27 @@ export default {
       usePID: false
     };
   },
-  methods: [
-    function created() {
+
+  mounted() {
+  },
+
+  methods: {
+    test() {
+        
+    },
+    created() {
       alert(11);
     },
-    function mlChange() {
+    mlChange() {
       alert(123);
       if (this.useML == false) this.useML = true;
       else this.useML = false;
     },
-    function pidChange() {
+    pidChange() {
       if (this.usePID == false) this.usePID = true;
       else this.usePID = false;
     }
-  ]
+  }
 };
 </script>
 
