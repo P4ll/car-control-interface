@@ -40,7 +40,12 @@
             </q-list>
         </q-drawer>
         <q-page class="flex flex-center">
-            <img alt="Quasar logo" src="../assets/logo.png" @load="test()" />
+            <q-btn @click="test2()" />
+            <img :src="mainImg" alt="1"/>
+            <!--<img :src="mainImg"/>-->
+            <img src="data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAAUA
+    AAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO
+        9TXL0Y4OHwAAAABJRU5ErkJggg==" alt="Red dot" />
             <div id="pic"></div>
         </q-page>
     </q-layout>
@@ -61,18 +66,52 @@ export default {
             leftDrawerOpen: false,
             useML: false,
             usePID: false,
-            intervalId: null
+            intervalId: null,
+            socket: null,
+            mainImg: "./assets/1.mp4"
         };
     },
 
-    mounted() {},
+    mounted() {
+        this.test();
+    },
 
     methods: {
         test() {
-            this.intervalId = setInterval(this.test2, 0);
+            this.socket = new WebSocket(
+                "ws://localhost:8765"
+            );
+
+            this.socket.onopen = function() {
+                alert("connected");
+            };
+
+            this.socket.onmessage = function(event) {
+                alert(`[message] Данные получены с сервера: ${event.data}`);
+                this.mainImg = "data:image/jpg;base64, " + event.data;
+            };
+
+            this.socket.onclose = function(event) {
+                if (event.wasClean) {
+                    alert(
+                        `[close] Соединение закрыто чисто, код=${event.code} причина=${event.reason}`
+                    );
+                } else {
+                    // например, сервер убил процесс или сеть недоступна
+                    // обычно в этом случае event.code 1006
+                    alert("[close] Соединение прервано");
+                }
+                clearInterval(this.intervalId);
+            };
+
+            this.socket.onerror = function(error) {
+                alert(`[error] ${error.message}`);
+                clearInterval(this.intervalId);
+            };
+            //this.intervalId = setInterval(this.test2, 0);
         },
         test2() {
-            alert('interval');
+            this.socket.send("1");
         },
         mlChange() {
             if (this.useML == false) this.useML = true;
