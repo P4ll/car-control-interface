@@ -40,12 +40,7 @@
             </q-list>
         </q-drawer>
         <q-page class="flex flex-center">
-            <q-btn @click="test2" />
-            <q-img :src="mainImg"/>
-            <!--<img :src="mainImg"/>-->
-            <img src="data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAAUA
-    AAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO
-        9TXL0Y4OHwAAAABJRU5ErkJggg==" alt="Red dot" />
+            <img :src="mainImg"/>
             <div id="pic"></div>
         </q-page>
     </q-layout>
@@ -53,14 +48,13 @@
 
 <script>
 import { ToggleButton } from "vue-js-toggle-button";
-import { QImg } from 'quasar';
+var msg = "";
 
 export default {
     name: "MainScreen",
 
     components: {
         ToggleButton,
-        QImg
     },
 
     data() {
@@ -70,17 +64,16 @@ export default {
             usePID: false,
             intervalId: null,
             socket: null,
-            mainImg: "../assets/logo.png",
-            msg: ""
+            mainImg: ""
         };
     },
 
     mounted() {
-        this.test();
+        this.socketSetting();
     },
 
     methods: {
-        test() {
+        socketSetting() {
             this.socket = new WebSocket(
                 "ws://localhost:8765"
             );
@@ -90,13 +83,12 @@ export default {
             };
 
             this.socket.onmessage = function(event) {
-                console.log(`[message] Данные получены с сервера: ${event.data}`);
-                // this.mainImg = "data:image/jpg;base64, " + event.data;
-                this.msg = event.data;
-                // this.msg = this.mainImg;
+                console.log("data:image/jpg;base64, " + event.data);
+                msg = "data:image/jpg;base64, " + event.data;
             };
 
             this.socket.onclose = function(event) {
+                clearInterval(this.intervalId);
                 if (event.wasClean) {
                     alert(
                         `[close] Соединение закрыто чисто, код=${event.code} причина=${event.reason}`
@@ -106,19 +98,17 @@ export default {
                     // обычно в этом случае event.code 1006
                     alert("[close] Соединение прервано");
                 }
-                // clearInterval(this.intervalId);
             };
 
             this.socket.onerror = function(error) {
+                clearInterval(this.intervalId);
                 alert(`[error] ${error.message}`);
-                // clearInterval(this.intervalId);
             };
-            //this.intervalId = setInterval(this.test2, 0);
+            this.intervalId = setInterval(this.sendingMessage, 0);
         },
-        test2() {
-            await this.socket.send("1");
-            this.mainImg = Math.random();
-            this.mainImg = this.msg;
+        sendingMessage() {
+            this.socket.send("1");
+            this.mainImg = msg;
         },
         mlChange() {
             if (this.useML == false) this.useML = true;

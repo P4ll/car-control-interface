@@ -5,7 +5,6 @@ import cv2
 import base64
 
 # Capture video from file
-# cap = cv2.VideoCapture('D:/09d980032ed1.480.mp4')
 cap = cv2.VideoCapture('src//assets//1.mp4')
 
 
