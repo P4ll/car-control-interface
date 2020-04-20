@@ -27,8 +27,8 @@
                     <q-item-section avatar>
                         <toggle-button v-model="useML" />
                     </q-item-section>
-                    <q-item-section
-                        >Распознавание лиц {{ useML }}</q-item-section
+                    <q-item-section v-model="keyUpPressed"
+                        >Распознавание лиц</q-item-section
                     >
                 </q-item>
                 <q-item clickable>
@@ -48,6 +48,7 @@
 
 <script>
 import { ToggleButton } from "vue-js-toggle-button";
+
 var msg = "";
 
 export default {
@@ -64,8 +65,22 @@ export default {
             usePID: false,
             intervalId: null,
             socket: null,
-            mainImg: ""
+            mainImg: "",
+            keyUpPressed: false,
+            keyDownPressed: false,
+            keyLeftPressed: false,
+            keyRightPressed: false,
         };
+    },
+
+    created() {
+        window.addEventListener('keydown', this.keyDown);
+        window.addEventListener('keyup', this.keyUp);
+    },
+
+    beforeDestroy() {
+        window.removeEventListener('keydown', this.keyDown);
+        window.removeEventListener('keyup', this.keyUp);
     },
 
     mounted() {
@@ -73,6 +88,26 @@ export default {
     },
 
     methods: {
+        keyDown(e) {
+            if (e.key == "ArrowUp")
+                this.keyUpPressed = true;
+            else if (e.key == "ArrowDown")
+                this.keyDownPressed = true;
+            else if (e.key == "ArrowRight")
+                this.keyRightPressed = true;
+            else if (e.key == "ArrowLeft")
+                this.keyLeftPressed = true;
+        },
+        keyUp(e) {
+            if (e.key == "ArrowUp")
+                this.keyUpPressed = false;
+            else if (e.key == "ArrowDown")
+                this.keyDownPressed = false;
+            else if (e.key == "ArrowRight")
+                this.keyRightPressed = false;
+            else if (e.key == "ArrowLeft")
+                this.keyLeftPressed = false;
+        },
         socketSetting() {
             this.socket = new WebSocket(
                 "ws://localhost:8765"
@@ -83,7 +118,6 @@ export default {
             };
 
             this.socket.onmessage = function(event) {
-                console.log("data:image/jpg;base64, " + event.data);
                 msg = "data:image/jpg;base64, " + event.data;
             };
 
@@ -94,8 +128,6 @@ export default {
                         `[close] Соединение закрыто чисто, код=${event.code} причина=${event.reason}`
                     );
                 } else {
-                    // например, сервер убил процесс или сеть недоступна
-                    // обычно в этом случае event.code 1006
                     alert("[close] Соединение прервано");
                 }
             };
@@ -107,7 +139,29 @@ export default {
             this.intervalId = setInterval(this.sendingMessage, 0);
         },
         sendingMessage() {
-            this.socket.send("1");
+            // velocity(left, right) pid ml
+            let rightSpeed = 0;
+            let leftSpeed = 0;
+            let outMessage = "";
+            if (this.keyUpPressed)
+                leftSpeed = 1, rightSpeed = 1;
+            if (this.keyDownPressed)
+                leftSpeed = -1, rightSpeed = -1;
+            if (this.keyLeftPressed)
+                rightSpeed = 1;
+            if (this.keyRightPressed)
+                leftSpeed = 1;
+            outMessage = leftSpeed + " " + rightSpeed + " ";
+            if (this.usePID)
+                outMessage += 1;
+            else
+                outMessage += 0;
+            if (this.useML)
+                outMessage += " " + 1;
+            else
+                outMessage += " " + 0;
+            this.socket.send(outMessage);
+            console.log(outMessage);
             this.mainImg = msg;
         },
         mlChange() {

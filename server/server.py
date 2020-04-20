@@ -13,15 +13,10 @@ async def echo(websocket, path):
         print(message)
         ret, frame = cap.read()
 
-        if cv2.waitKey(30) & 0xFF == ord('q'):
-            break
-
         if ret == True:
-            cv2.imshow('frame', frame)
             retval, buffer = cv2.imencode('.jpg', frame)
             jpg_as_text = base64.b64encode(buffer).decode('utf-8')
             await websocket.send(jpg_as_text)
-            print('send')
 
 start_server = websockets.serve(echo, "localhost", 8765)
 
