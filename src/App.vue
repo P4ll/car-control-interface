@@ -1,7 +1,10 @@
 <template>
     <q-layout view="lHh Lpr lFf">
         <q-page-container>
-            <q-page class="flex flex-center" v-if="isNotConnected">
+            <q-page
+                class="flex flex-center"
+                v-if="isNotConnected && !isSocketConnected"
+            >
                 <q-list>
                     <q-item-label header>Данные о подключении</q-item-label>
                     <q-item>
@@ -84,7 +87,7 @@
                         <q-item>
                             <q-btn
                                 label="Ввести новые данные о подключении"
-                                @click="getBack"
+                                @click="getBackToSetting"
                             />
                         </q-item>
                     </q-list>
@@ -103,6 +106,7 @@ import { ToggleButton } from "vue-js-toggle-button";
 
 var msg = "";
 var isSocketConnected = false;
+var intervalId = null;
 
 export default {
     name: "LayoutDefault",
@@ -121,7 +125,6 @@ export default {
             portText: "8765",
             useML: false,
             usePID: false,
-            intervalId: null,
             socket: null,
             mainImg: "",
             keyUpPressed: false,
@@ -133,24 +136,32 @@ export default {
 
     methods: {
         getBackToSetting() {
+            window.removeEventListener("keydown", this.keyDown);
+            window.removeEventListener("keyup", this.keyUp);
+            clearInterval(intervalId);
             this.isNotConnected = true;
+            this.socket.close();
         },
-        async checkData() {
+        checkData() {
             const regexIp = RegExp(
                 "^[0-9]{1,3}[.][0-9]{1,3}[.][0-9]{1,3}[.][0-9]{1,3}$"
             );
             const regexPort = RegExp("^[0-9]{1,4}$");
-            if (regexIp.test(this.ipText) && regexPort.test(this.portText)) {
-                await this.socketSetting();
-                if (isSocketConnected) {
-                    this.isNotConnected = false;
-                    window.addEventListener("keydown", this.keyDown);
-                    window.addEventListener("keyup", this.keyUp);
-                } else {
-                    alert("К сокету не удалось подключиться");
-                }
+
+            this.socketSetting()
+            if (
+                regexIp.test(this.ipText) &&
+                regexPort.test(this.portText) &&
+                isSocketConnected
+            ) {
+                this.isNotConnected = false;
+                isSocketConnected = true;
+                console.log(isSocketConnected);
+                window.addEventListener("keydown", this.keyDown);
+                window.addEventListener("keyup", this.keyUp);
+                console.log("К сокету не удалось подключиться");
             } else {
-                alert("Данные были введены неверно");
+                console.log("Данные были введены неверно или к сокету не удалось подключиться");
             }
         },
         keyDown(e) {
@@ -165,8 +176,8 @@ export default {
             else if (e.key == "ArrowRight") this.keyRightPressed = false;
             else if (e.key == "ArrowLeft") this.keyLeftPressed = false;
         },
-        async socketSetting() {
-            this.socket = await new WebSocket(
+        socketSetting() {
+            this.socket = new WebSocket(
                 "ws://" + this.ipText + ":" + this.portText
             );
 
@@ -181,23 +192,26 @@ export default {
             this.socket.onclose = function(event) {
                 window.removeEventListener("keydown", this.keyDown);
                 window.removeEventListener("keyup", this.keyUp);
-                clearInterval(this.intervalId);
+                clearInterval(intervalId);
+                isSocketConnected = false;
                 this.isNotConnected = true;
                 if (event.wasClean) {
-                    alert(
+                    console.log(
                         `[close] Соединение закрыто чисто, код=${event.code} причина=${event.reason}`
                     );
                 } else {
-                    alert("[close] Соединение прервано");
+                    console.log("[close] Соединение прервано");
                 }
             };
 
             this.socket.onerror = function(error) {
                 this.isNotConnected = true;
-                clearInterval(this.intervalId);
-                alert(`[error] ${error.message}`);
+                isSocketConnected = false;
+                clearInterval(intervalId);
+                console.log(`[error] ${error.message}`);
             };
-            this.intervalId = setInterval(this.sendingMessage, 0);
+            intervalId = setInterval(this.sendingMessage, 100);
+            return true;
         },
         sendingMessage() {
             // velocity(left, right) pid ml
