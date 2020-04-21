@@ -38,7 +38,7 @@
                     <q-item-section>ПИД</q-item-section>
                 </q-item>
                 <q-item>
-                    <q-btn label="Ввести новые данные о подключении"/>
+                    <q-btn label="Ввести новые данные о подключении" @click="getBack"/>
                 </q-item>
             </q-list>
         </q-drawer>
@@ -91,6 +91,10 @@ export default {
     },
 
     methods: {
+        getBack() {
+            this.$router.push({ path: `/setting`});
+            // Надо закрывать соединение и еще че нить поделать
+        },
         keyDown(e) {
             if (e.key == "ArrowUp")
                 this.keyUpPressed = true;
