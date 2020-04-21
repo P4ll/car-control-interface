@@ -93,7 +93,7 @@
                     </q-list>
                 </q-drawer>
                 <q-page class="flex flex-center">
-                    <img :src="mainImg" />
+                    <img :src="mainImg" class="img-m"/>
                     <div id="pic"></div>
                 </q-page>
             </q-layout>
@@ -242,5 +242,9 @@ export default {
     },
 };
 </script>
-
-<style></style>
+<style>
+.img-m {
+    width: 640px;
+    height: 480px;
+}
+</style>
