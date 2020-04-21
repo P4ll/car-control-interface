@@ -1,19 +1,16 @@
 <template>
   <q-layout view="lHh Lpr lFf">
     <q-page-container>
-      <MainScreen />
+      <router-view></router-view>
     </q-page-container>
   </q-layout>
 </template>
 
 <script>
-import MainScreen from './components/MainScreen.vue'
-
 export default {
   name: 'LayoutDefault',
 
   components: {
-    MainScreen
   },
 
   data () {

@@ -1,7 +1,7 @@
 <template>
     <q-layout view="lHh Lpr lFf">
         <q-header elevated class="glossy">
-            <q-toolbar>
+            <q-toolbar class="bg-primary text-white">
                 <q-btn
                     flat
                     dense
@@ -11,7 +11,7 @@
                     icon="menu"
                 />
 
-                <q-toolbar-title>Панель управления автомоделью</q-toolbar-title>
+                <q-toolbar-title center>Панель настроек</q-toolbar-title>
             </q-toolbar>
         </q-header>
 
@@ -22,7 +22,7 @@
             content-class="bg-grey-2"
         >
             <q-list>
-                <q-item-label header>Settings</q-item-label>
+                <q-item-label header>Настройки</q-item-label>
                 <q-item clickable>
                     <q-item-section avatar>
                         <toggle-button v-model="useML" />
@@ -36,6 +36,9 @@
                         <toggle-button v-model="usePID" />
                     </q-item-section>
                     <q-item-section>ПИД</q-item-section>
+                </q-item>
+                <q-item>
+                    <q-btn label="Ввести новые данные о подключении"/>
                 </q-item>
             </q-list>
         </q-drawer>
