@@ -1,18 +1,15 @@
 <template>
     <q-layout view="lHh Lpr lFf">
         <q-page-container>
-            <q-page
-                class="flex flex-center"
-                v-if="isNotConnected"
-            >
+            <q-page class="flex flex-center" v-if="isNotConnected">
                 <q-list>
                     <q-item-label header>Данные о подключении</q-item-label>
                     <q-item>
                         <q-input
+                            label="IP"
                             filled
                             v-model="ipText"
                             placeholder="192.168.0.X"
-                            hint="Ip"
                         >
                             <template v-slot:append>
                                 <q-avatar>
@@ -25,10 +22,10 @@
                     </q-item>
                     <q-item>
                         <q-input
+                            label="Port"
                             filled
                             v-model="portText"
                             placeholder="8765"
-                            hint="Port"
                         >
                             <template v-slot:append>
                                 <q-avatar>
@@ -40,11 +37,11 @@
                         </q-input>
                     </q-item>
                     <q-item>
-                        <q-btn label="Ввод!" @click="checkData" />
+                        <q-btn label="Подключиться" @click="checkData" />
                     </q-item>
                 </q-list>
             </q-page>
-            <q-layout view="lHh Lpr lFf" v-else>
+            <q-page class="flex flex-center" v-else>
                 <q-header elevated class="glossy">
                     <q-toolbar class="bg-primary text-white">
                         <q-btn
@@ -93,10 +90,62 @@
                     </q-list>
                 </q-drawer>
                 <q-page class="flex flex-center">
-                    <img :src="mainImg" class="img-m"/>
-                    <div id="pic"></div>
+                    <q-list>
+                        <q-item>
+                            <div id="pic" class="row">
+                                <div class="col">
+                                    <img :src="mainImg" class="img-m" />
+                                </div>
+                            </div>
+                        </q-item>
+                        <q-item>
+                            <q-item-section class="arrow">
+                                <div class="arrow arrow-holder">
+                                    <div class="row">
+                                        <div class="col"></div>
+                                        <div class="col">
+                                            <q-btn
+                                                round
+                                                :color="upCol"
+                                                icon="navigation"
+                                                class="arrow arrow-up"
+                                            />
+                                        </div>
+                                        <div class="col"></div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col">
+                                            <q-btn
+                                                round
+                                                :color="leftCol"
+                                                icon="navigation"
+                                                class="arrow arrow-right"
+                                            />
+                                        </div>
+                                        <div class="col">
+                                            <q-btn
+                                                round
+                                                :color="downCol"
+                                                icon="navigation"
+                                                class="arrow arrow-down"
+                                            />
+                                        </div>
+                                        <div class="col">
+                                            <q-btn
+                                                round
+                                                :color="rightCol"
+                                                icon="navigation"
+                                                class="arrow arrow-left"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </q-item-section>
+                        </q-item>
+                    </q-list>
                 </q-page>
-            </q-layout>
+                <q-page class="flex flex-center"> </q-page>
+            </q-page>
         </q-page-container>
     </q-layout>
 </template>
@@ -110,6 +159,15 @@ export default {
     name: "LayoutDefault",
     components: {
         ToggleButton,
+    },
+    beforeMount() {
+        document.title = "Панель управления";
+    },
+    mounted() {
+        this.upCol = this.passiveCol;
+        this.downCol = this.passiveCol;
+        this.rightCol = this.passiveCol;
+        this.leftCol = this.passiveCol;
     },
     data() {
         return {
@@ -127,6 +185,12 @@ export default {
             keyDownPressed: false,
             keyLeftPressed: false,
             keyRightPressed: false,
+            activeCol: "blue",
+            passiveCol: "grey",
+            upCol: this.passiveCol,
+            downCol: this.passiveCol,
+            rightCol: this.passiveCol,
+            leftCol: this.passiveCol,
         };
     },
     methods: {
@@ -137,31 +201,52 @@ export default {
             this.isNotConnected = true;
             this.socket.close();
         },
+        showNegNotify(outMsg) {
+            this.$q.notify({
+                type: "negative",
+                message: outMsg,
+            });
+        },
         checkData() {
             const regexIp = RegExp(
                 "^[0-9]{1,3}[.][0-9]{1,3}[.][0-9]{1,3}[.][0-9]{1,3}$"
             );
             const regexPort = RegExp("^[0-9]{1,4}$");
-            if (
-                regexIp.test(this.ipText) &&
-                regexPort.test(this.portText)
-            ) {
-                this.socketSetting()
+            if (regexIp.test(this.ipText) && regexPort.test(this.portText)) {
+                this.socketSetting();
             } else {
-                alert("Данные были введены неверно");
+                this.showNegNotify("Данные были введены неверно");
             }
         },
         keyDown(e) {
-            if (e.key == "ArrowUp") this.keyUpPressed = true;
-            else if (e.key == "ArrowDown") this.keyDownPressed = true;
-            else if (e.key == "ArrowRight") this.keyRightPressed = true;
-            else if (e.key == "ArrowLeft") this.keyLeftPressed = true;
+            if (e.key == "ArrowUp") {
+                this.keyUpPressed = true;
+                this.upCol = this.activeCol;
+            } else if (e.key == "ArrowDown") {
+                this.keyDownPressed = true;
+                this.downCol = this.activeCol;
+            } else if (e.key == "ArrowRight") {
+                this.keyRightPressed = true;
+                this.rightCol = this.activeCol;
+            } else if (e.key == "ArrowLeft") {
+                this.keyLeftPressed = true;
+                this.leftCol = this.activeCol;
+            }
         },
         keyUp(e) {
-            if (e.key == "ArrowUp") this.keyUpPressed = false;
-            else if (e.key == "ArrowDown") this.keyDownPressed = false;
-            else if (e.key == "ArrowRight") this.keyRightPressed = false;
-            else if (e.key == "ArrowLeft") this.keyLeftPressed = false;
+            if (e.key == "ArrowUp") {
+                this.keyUpPressed = false;
+                this.upCol = this.passiveCol;
+            } else if (e.key == "ArrowDown") {
+                this.keyDownPressed = false;
+                this.downCol = this.passiveCol;
+            } else if (e.key == "ArrowRight") {
+                this.keyRightPressed = false;
+                this.rightCol = this.passiveCol;
+            } else if (e.key == "ArrowLeft") {
+                this.keyLeftPressed = false;
+                this.leftCol = this.passiveCol;
+            }
         },
         socketSetting() {
             this.socket = new WebSocket(
@@ -188,11 +273,10 @@ export default {
                     console.log("[close] Соединение прервано");
                 }
             };
-            this.socket.onerror = (error) => {
-                alert("Ошибка соединения");
+            this.socket.onerror = () => {
+                this.showNegNotify("Ошибка соединения");
                 this.isNotConnected = true;
                 clearInterval(intervalId);
-                console.log(`[error] ${error.message}`);
             };
             intervalId = setInterval(this.sendingMessage, 100);
             return true;
@@ -230,5 +314,26 @@ export default {
 .img-m {
     width: 640px;
     height: 480px;
+}
+
+.arrow {
+    text-align: center;
+}
+
+.arrow-down {
+    transform: rotate(180deg);
+}
+
+.arrow-right {
+    transform: rotate(270deg);
+}
+
+.arrow-left {
+    transform: rotate(90deg);
+}
+
+.arrow-holder {
+    max-width: 129px;
+    align-self: center;
 }
 </style>
