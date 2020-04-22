@@ -3,7 +3,7 @@
         <q-page-container>
             <q-page
                 class="flex flex-center"
-                v-if="isNotConnected && !isSocketConnected"
+                v-if="isNotConnected"
             >
                 <q-list>
                     <q-item-label header>Данные о подключении</q-item-label>
@@ -103,18 +103,14 @@
 
 <script>
 import { ToggleButton } from "vue-js-toggle-button";
-
 var msg = "";
-var isSocketConnected = false;
 var intervalId = null;
 
 export default {
     name: "LayoutDefault",
-
     components: {
         ToggleButton,
     },
-
     data() {
         return {
             leftDrawerOpen: false,
@@ -133,7 +129,6 @@ export default {
             keyRightPressed: false,
         };
     },
-
     methods: {
         getBackToSetting() {
             window.removeEventListener("keydown", this.keyDown);
@@ -147,21 +142,13 @@ export default {
                 "^[0-9]{1,3}[.][0-9]{1,3}[.][0-9]{1,3}[.][0-9]{1,3}$"
             );
             const regexPort = RegExp("^[0-9]{1,4}$");
-
-            this.socketSetting()
             if (
                 regexIp.test(this.ipText) &&
-                regexPort.test(this.portText) &&
-                isSocketConnected
+                regexPort.test(this.portText)
             ) {
-                this.isNotConnected = false;
-                isSocketConnected = true;
-                console.log(isSocketConnected);
-                window.addEventListener("keydown", this.keyDown);
-                window.addEventListener("keyup", this.keyUp);
-                console.log("К сокету не удалось подключиться");
+                this.socketSetting()
             } else {
-                console.log("Данные были введены неверно или к сокету не удалось подключиться");
+                alert("Данные были введены неверно");
             }
         },
         keyDown(e) {
@@ -180,20 +167,18 @@ export default {
             this.socket = new WebSocket(
                 "ws://" + this.ipText + ":" + this.portText
             );
-
-            this.socket.onopen = function() {
-                isSocketConnected = true;
+            this.socket.onopen = () => {
+                this.isNotConnected = false;
+                window.addEventListener("keydown", this.keyDown);
+                window.addEventListener("keyup", this.keyUp);
             };
-
-            this.socket.onmessage = function(event) {
+            this.socket.onmessage = (event) => {
                 msg = "data:image/jpg;base64, " + event.data;
             };
-
-            this.socket.onclose = function(event) {
+            this.socket.onclose = (event) => {
                 window.removeEventListener("keydown", this.keyDown);
                 window.removeEventListener("keyup", this.keyUp);
                 clearInterval(intervalId);
-                isSocketConnected = false;
                 this.isNotConnected = true;
                 if (event.wasClean) {
                     console.log(
@@ -203,10 +188,9 @@ export default {
                     console.log("[close] Соединение прервано");
                 }
             };
-
-            this.socket.onerror = function(error) {
+            this.socket.onerror = (error) => {
+                alert("Ошибка соединения");
                 this.isNotConnected = true;
-                isSocketConnected = false;
                 clearInterval(intervalId);
                 console.log(`[error] ${error.message}`);
             };
