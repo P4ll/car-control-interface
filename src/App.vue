@@ -256,6 +256,7 @@ export default {
                 this.isNotConnected = false;
                 window.addEventListener("keydown", this.keyDown);
                 window.addEventListener("keyup", this.keyUp);
+                intervalId = setInterval(this.sendingMessage, 1);
             };
             this.socket.onmessage = (event) => {
                 msg = "data:image/jpg;base64, " + event.data;
@@ -278,8 +279,6 @@ export default {
                 this.isNotConnected = true;
                 clearInterval(intervalId);
             };
-            intervalId = setInterval(this.sendingMessage, 100);
-            return true;
         },
         sendingMessage() {
             // velocity(left, right) pid ml
