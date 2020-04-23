@@ -144,7 +144,6 @@
                         </q-item>
                     </q-list>
                 </q-page>
-                <q-page class="flex flex-center"> </q-page>
             </q-page>
         </q-page-container>
     </q-layout>
@@ -153,7 +152,6 @@
 <script>
 import { ToggleButton } from "vue-js-toggle-button";
 var msg = "";
-var intervalId = null;
 
 export default {
     name: "LayoutDefault",
@@ -171,11 +169,10 @@ export default {
     },
     data() {
         return {
+            intervalId: null,
             leftDrawerOpen: false,
             isNotConnected: true,
-            // ipText: "192.168.0.4",
             ipText: "127.0.0.1",
-            // portText: "9090",
             portText: "8765",
             useML: false,
             usePID: false,
@@ -197,7 +194,7 @@ export default {
         getBackToSetting() {
             window.removeEventListener("keydown", this.keyDown);
             window.removeEventListener("keyup", this.keyUp);
-            clearInterval(intervalId);
+            clearInterval(this.intervalId);
             this.isNotConnected = true;
             this.socket.close();
         },
@@ -257,7 +254,7 @@ export default {
                     this.isNotConnected = false;
                     window.addEventListener("keydown", this.keyDown);
                     window.addEventListener("keyup", this.keyUp);
-                    intervalId = setInterval(this.sendingMessage, 1);
+                    this.intervalId = setInterval(this.sendingMessage, 100);
                 };
                 this.socket.onmessage = (event) => {
                     msg = "data:image/jpg;base64, " + event.data;
@@ -265,13 +262,14 @@ export default {
                 this.socket.onclose = () => {
                     window.removeEventListener("keydown", this.keyDown);
                     window.removeEventListener("keyup", this.keyUp);
-                    clearInterval(intervalId);
+                    clearInterval(this.intervalId);
                     this.isNotConnected = true;
+                    this.showNegNotify("Соединение закрыто");
                 };
                 this.socket.onerror = () => {
                     this.showNegNotify("Ошибка соединения");
                     this.isNotConnected = true;
-                    clearInterval(intervalId);
+                    clearInterval(this.intervalId);
                 };
             } catch (e) {
                 this.showNegNotify(
@@ -294,7 +292,6 @@ export default {
             if (this.useML) outMessage += " " + 1;
             else outMessage += " " + 0;
             this.socket.send(outMessage);
-            console.log(outMessage);
             this.mainImg = msg;
         },
         mlChange() {

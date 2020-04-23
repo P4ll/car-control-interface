@@ -5,7 +5,7 @@ import cv2
 import base64
 
 # Capture video from file
-cap = cv2.VideoCapture('src//assets//1.mp4')
+cap = cv2.VideoCapture('src//assets//video_test.mp4')
 
 
 async def echo(websocket, path):
