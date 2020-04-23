@@ -249,36 +249,35 @@ export default {
             }
         },
         socketSetting() {
-            this.socket = new WebSocket(
-                "ws://" + this.ipText + ":" + this.portText
-            );
-            this.socket.onopen = () => {
-                this.isNotConnected = false;
-                window.addEventListener("keydown", this.keyDown);
-                window.addEventListener("keyup", this.keyUp);
-                intervalId = setInterval(this.sendingMessage, 1);
-            };
-            this.socket.onmessage = (event) => {
-                msg = "data:image/jpg;base64, " + event.data;
-            };
-            this.socket.onclose = (event) => {
-                window.removeEventListener("keydown", this.keyDown);
-                window.removeEventListener("keyup", this.keyUp);
-                clearInterval(intervalId);
-                this.isNotConnected = true;
-                if (event.wasClean) {
-                    console.log(
-                        `[close] Соединение закрыто чисто, код=${event.code} причина=${event.reason}`
-                    );
-                } else {
-                    console.log("[close] Соединение прервано");
-                }
-            };
-            this.socket.onerror = () => {
-                this.showNegNotify("Ошибка соединения");
-                this.isNotConnected = true;
-                clearInterval(intervalId);
-            };
+            try {
+                this.socket = new WebSocket(
+                    "ws://" + this.ipText + ":" + this.portText
+                );
+                this.socket.onopen = () => {
+                    this.isNotConnected = false;
+                    window.addEventListener("keydown", this.keyDown);
+                    window.addEventListener("keyup", this.keyUp);
+                    intervalId = setInterval(this.sendingMessage, 1);
+                };
+                this.socket.onmessage = (event) => {
+                    msg = "data:image/jpg;base64, " + event.data;
+                };
+                this.socket.onclose = () => {
+                    window.removeEventListener("keydown", this.keyDown);
+                    window.removeEventListener("keyup", this.keyUp);
+                    clearInterval(intervalId);
+                    this.isNotConnected = true;
+                };
+                this.socket.onerror = () => {
+                    this.showNegNotify("Ошибка соединения");
+                    this.isNotConnected = true;
+                    clearInterval(intervalId);
+                };
+            } catch (e) {
+                this.showNegNotify(
+                    "Ошибка соединения, проверьте правильность введенных данных"
+                );
+            }
         },
         sendingMessage() {
             // velocity(left, right) pid ml
