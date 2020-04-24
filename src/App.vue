@@ -92,11 +92,7 @@
                 <q-page class="flex flex-center">
                     <q-list>
                         <q-item>
-                            <div id="pic" class="row">
-                                <div class="col">
-                                    <img :src="mainImg" class="img-m" />
-                                </div>
-                            </div>
+                            <img :src="mainImg" class="img-m" />
                         </q-item>
                         <q-item>
                             <q-item-section class="arrow">
@@ -151,7 +147,6 @@
 
 <script>
 import { ToggleButton } from "vue-js-toggle-button";
-var msg = "";
 
 export default {
     name: "LayoutDefault",
@@ -191,19 +186,27 @@ export default {
         };
     },
     methods: {
+        /**
+         * Метод для обработки нажатия кнопки возврата к настройкам
+         */
         getBackToSetting() {
-            window.removeEventListener("keydown", this.keyDown);
-            window.removeEventListener("keyup", this.keyUp);
-            clearInterval(this.intervalId);
-            this.isNotConnected = true;
             this.socket.close();
         },
+
+        /**
+         * Метод показывает важные уведомления (ошибки и проч.)
+         * parms: outMsg - сообщение уведомления
+         */
         showNegNotify(outMsg) {
             this.$q.notify({
                 type: "negative",
                 message: outMsg,
             });
         },
+
+        /**
+         * Метод обработки нажатия на кнопку "Подключиться"
+         */
         checkData() {
             const regexIp = RegExp(
                 "^[0-9]{1,3}[.][0-9]{1,3}[.][0-9]{1,3}[.][0-9]{1,3}$"
@@ -215,7 +218,15 @@ export default {
                 this.showNegNotify("Данные были введены неверно");
             }
         },
+
+        /**
+         * Обрабатывает события нажатия на стрелки клавиатуры
+         */
         keyDown(e) {
+            /**
+             * Если код нажатой клавиши соответствует нужной, тогда сигнализируем, что она была нажата,
+             * а цвет иконки изменяем.
+             */
             if (e.key == "ArrowUp") {
                 this.keyUpPressed = true;
                 this.upCol = this.activeCol;
@@ -230,7 +241,12 @@ export default {
                 this.leftCol = this.activeCol;
             }
         },
+
+        /**
+         * Обработчик отжатия клавиш стрелок
+         */
         keyUp(e) {
+            // Если код клавиши соответсвует, то сигнализируется отжатие, а цвет иконки изменяется
             if (e.key == "ArrowUp") {
                 this.keyUpPressed = false;
                 this.upCol = this.passiveCol;
@@ -245,21 +261,40 @@ export default {
                 this.leftCol = this.passiveCol;
             }
         },
+
+        /**
+         * Метод, настраивающий соединение с сервером
+         */
         socketSetting() {
             try {
+                // Пытаемся соединиться с сервером через сокет
                 this.socket = new WebSocket(
                     "ws://" + this.ipText + ":" + this.portText
                 );
+
+                // Добавляем обработчики событий
                 this.socket.onopen = () => {
+                    /**
+                     * При удачном соединении открывается экран управления,
+                     * добавляеются обработчики событий нажатия на стрелки и
+                     * устанавливается интервал отправки сообщений
+                     */
                     this.isNotConnected = false;
                     window.addEventListener("keydown", this.keyDown);
                     window.addEventListener("keyup", this.keyUp);
                     this.intervalId = setInterval(this.sendingMessage, 100);
                 };
                 this.socket.onmessage = (event) => {
-                    msg = "data:image/jpg;base64, " + event.data;
+                    this.mainImg = "data:image/jpg;base64, " + event.data;
                 };
                 this.socket.onclose = () => {
+                    /**
+                     * При закрытии сокета:
+                     *      1. удаляем слушателей событий;
+                     *      2. удаляем интервал;
+                     *      3. показваем окно настройки соединения;
+                     *      4. показываем уведомление пользователю
+                     */
                     window.removeEventListener("keydown", this.keyDown);
                     window.removeEventListener("keyup", this.keyUp);
                     clearInterval(this.intervalId);
@@ -272,35 +307,44 @@ export default {
                     clearInterval(this.intervalId);
                 };
             } catch (e) {
+                // При неудачном соединении показывается уведомление
                 this.showNegNotify(
                     "Ошибка соединения, проверьте правильность введенных данных"
                 );
             }
         },
+
+        /**
+         * Метод отправки сообщения серверу
+         */
         sendingMessage() {
             // velocity(left, right) pid ml
+            /**
+             * Скорости для левых и правых колес
+             * Скорость = [1; 0], 1 - максимальная, 0 - колеса не крутятся
+             * При умножении на -1 - крутятся в обратную сторону
+             */
             let rightSpeed = 0;
             let leftSpeed = 0;
+
+            // Выходное сообщение: {скорость левых колес} {скорость правых колес} {используем ПИД?} {используем распознование лиц?}
             let outMessage = "";
+
+            // Формируем направление движения от логических переменных нажатия кнопок
             if (this.keyUpPressed) (leftSpeed = 1), (rightSpeed = 1);
             if (this.keyDownPressed) (leftSpeed = -1), (rightSpeed = -1);
             if (this.keyLeftPressed) rightSpeed = 1;
             if (this.keyRightPressed) leftSpeed = 1;
+
             outMessage = leftSpeed + " " + rightSpeed + " ";
+            // Добавляем к сообщению данные о включенных опциях
             if (this.usePID) outMessage += 1;
             else outMessage += 0;
             if (this.useML) outMessage += " " + 1;
             else outMessage += " " + 0;
+
+            // Отправляем сообщение
             this.socket.send(outMessage);
-            this.mainImg = msg;
-        },
-        mlChange() {
-            if (this.useML == false) this.useML = true;
-            else this.useML = false;
-        },
-        pidChange() {
-            if (this.usePID == false) this.usePID = true;
-            else this.usePID = false;
         },
     },
 };
